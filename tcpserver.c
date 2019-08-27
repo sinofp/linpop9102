@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 int main() {
-  char buf[1024];
+  char buf[1024] = {0};
   struct sockaddr_in myaddr;
   struct sockaddr_in cliaddr;
   memset(&myaddr, 0, sizeof(myaddr));
@@ -20,7 +20,7 @@ int main() {
     printf("socket() failed\n");
     return -1;
   }
-  int socklen = sizeof(cliaddr);
+  socklen_t socklen = sizeof(cliaddr);
   /* bind(lisfd, (struct sockaddr*) &myaddr, sizeof(myaddr))
    * //给描述符绑定地址（ip、端口） */
   if (0 != bind(lisfd, (struct sockaddr *)&myaddr, sizeof(myaddr))) {
@@ -41,10 +41,10 @@ int main() {
     while (1) {
       recv(confd, buf, sizeof(buf), 0);
       printf("recv: %s\n", buf);
+      memset(&buf, 0, sizeof(buf));
     }
   } else if (0 == pid) {
     while (1) {
-      memset(&buf, 0, sizeof(buf));
       scanf("%s", &buf);
       send(confd, buf, sizeof(buf), 0);
     }
