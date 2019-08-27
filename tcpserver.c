@@ -3,6 +3,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 int main() {
   char buf[1024];
@@ -34,13 +35,19 @@ int main() {
   }
   printf("client: ip=%s\tport=%d\n", inet_ntoa(cliaddr.sin_addr),
          ntohs(cliaddr.sin_port));
-  while (1) {
-    recv(confd, buf, sizeof(buf), 0);
-    printf("recv: %s\n", buf);
 
-    memset(&buf, 0, sizeof(buf));
-    scanf("%s", &buf);
-    send(confd, buf, sizeof(buf), 0);
+  pid_t pid = fork();
+  if (pid > 0) {
+    while (1) {
+      recv(confd, buf, sizeof(buf), 0);
+      printf("recv: %s\n", buf);
+    }
+  } else if (0 == pid) {
+    while (1) {
+      memset(&buf, 0, sizeof(buf));
+      scanf("%s", &buf);
+      send(confd, buf, sizeof(buf), 0);
+    }
   }
   return 0;
 }
