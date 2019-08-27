@@ -3,6 +3,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 int main() {
   char buf[1024] = {0};
@@ -21,14 +22,21 @@ int main() {
   }
 
   if (0 == connect(sockfd, (struct sockaddr *)&sevaddr, sizeof(sevaddr))) {
-    while (1) {
-      scanf("%s", buf);
-      send(sockfd, buf, strlen(buf), 0);
+    pid_t pid = fork();
 
-      memset(&buf, 0, sizeof(buf));
-      recv(sockfd, buf, sizeof(buf), 0);
-
-      printf("recv: %s\n", buf);
+    if (pid > 0) {
+      while (1) {
+        scanf("%s", buf);
+        send(sockfd, buf, strlen(buf), 0);
+      }
+    } else if (0 == pid) {
+      while (1) {
+        memset(&buf, 0, sizeof(buf));
+        recv(sockfd, buf, sizeof(buf), 0);
+        printf("recv: %s\n", buf);
+      }
+    } else {
+      printf("fork error");
     }
   } else {
     printf("connect error\n");
