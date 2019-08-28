@@ -6,6 +6,23 @@
 #include <sys/types.h>
 #include <unistd.h>
 int clientfd[1024], i;
+
+void userLogin(char *buf) {
+  // 2|andy|1234
+  char uName[32] = {0};
+  char pWord[32] = {0};
+
+  sscanf(buf + 2, "%[^|]|%s", uName, pWord);
+  char sqlStr[1024] = {0};
+  /* sprintf(sqlStr, "%s'%s'%s'%s';", "select * from user where username = ",
+   * uName, */
+  /*         " and password = ", pWord); */
+  sprintf(sqlStr,
+          "select * from user where username = '%s' and password = '%s';",
+          uName, pWord);
+  puts(sqlStr);
+}
+
 void *thread_recv(void *arg) {
   int i = *(int *)arg;
   int confd = clientfd[i - 1];
@@ -18,6 +35,14 @@ void *thread_recv(void *arg) {
       pthread_exit(NULL);
     }
     printf("recv: %s\n", buf);
+    switch (buf[0]) {
+    case '1':
+      // zhu ce
+      break;
+    case '2':
+      userLogin(buf);
+      break;
+    }
   }
 }
 void *thread_send(void *arg) {
