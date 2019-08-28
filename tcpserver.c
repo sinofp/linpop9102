@@ -1,26 +1,42 @@
 #include <arpa/inet.h>
+#include <mysql/mysql.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 int clientfd[1024], i;
 
-void userLogin(char *buf) {
+int userLogin(char *buf) {
   // 2|andy|1234
   char uName[32] = {0};
   char pWord[32] = {0};
 
+  MYSQL mysql;
+  mysql_init(&mysql);
+  mysql_real_connect(&mysql, "127.0.0.1", "root", "root", "chatroom", 0, NULL,
+                     0);
+  MYSQL_RES *result;
+  MYSQL_ROW row;
+
   sscanf(buf + 2, "%[^|]|%s", uName, pWord);
   char sqlStr[1024] = {0};
-  /* sprintf(sqlStr, "%s'%s'%s'%s';", "select * from user where username = ",
-   * uName, */
-  /*         " and password = ", pWord); */
-  sprintf(sqlStr,
-          "select * from user where username = '%s' and password = '%s';",
-          uName, pWord);
+  sprintf(sqlStr, "select password from user where username = '%s'", uName);
   puts(sqlStr);
+  if (0 != mysql_query(&mysql, sqlStr)) {
+    printf("%s\n", mysql_error(&mysql));
+    return -1;
+  }
+  result = mysql_store_result(&mysql);
+  if ((row = mysql_fetch_row(result))) {
+    if (strcmp(row[0], pWord) == 0) {
+      printf("登陆成功\n");
+    } else
+      printf("wrong password\n");
+  } else
+    printf("unknown username");
 }
 
 void *thread_recv(void *arg) {
