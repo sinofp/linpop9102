@@ -33,10 +33,15 @@ int userLogin(char *buf) {
   if ((row = mysql_fetch_row(result))) {
     if (strcmp(row[0], pWord) == 0) {
       printf("登陆成功\n");
-    } else
+    } else {
       printf("wrong password\n");
-  } else
+      return -1;
+    }
+  } else {
     printf("unknown username");
+    return -1;
+  }
+  return 0;
 }
 
 void *thread_recv(void *arg) {
