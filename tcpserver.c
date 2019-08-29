@@ -9,7 +9,7 @@
 
 int clientfd[1024], i;
 
-int userLogin(char *buf) {
+int userLogin(char *buf, int confd) {
   // 2|andy|1234
   char uName[32] = {0};
   char pWord[32] = {0};
@@ -23,6 +23,7 @@ int userLogin(char *buf) {
 
   sscanf(buf + 2, "%[^|]|%s", uName, pWord);
   char sqlStr[1024] = {0};
+  char sendBuf[1024] = {0};
   sprintf(sqlStr, "select password from user where username = '%s'", uName);
   puts(sqlStr);
   if (0 != mysql_query(&mysql, sqlStr)) {
@@ -33,14 +34,18 @@ int userLogin(char *buf) {
   if ((row = mysql_fetch_row(result))) {
     if (strcmp(row[0], pWord) == 0) {
       printf("登陆成功\n");
+      strcpy(sendBuf, "0|success");
     } else {
       printf("wrong password\n");
+      strcpy(sendBuf, "1|wrong password");
       return -1;
     }
   } else {
     printf("unknown username");
+    strcpy(sendBuf, "1|unknown username");
     return -1;
   }
+  send(confd, buf, sizeof(buf), 0);
   return 0;
 }
 
@@ -61,7 +66,7 @@ void *thread_recv(void *arg) {
       // zhu ce
       break;
     case '2':
-      userLogin(buf);
+      userLogin(buf, confd);
       break;
     }
   }
