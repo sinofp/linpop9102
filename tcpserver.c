@@ -9,47 +9,6 @@
 
 int clientfd[1024], i;
 
-int userLogin(char* buf, int confd)
-{
-    // 2|andy|1234
-    char uName[32] = { 0 };
-    char pWord[32] = { 0 };
-
-    MYSQL mysql;
-    mysql_init(&mysql);
-    mysql_real_connect(&mysql, "127.0.0.1", "root", "root", "chatroom", 0, NULL,
-        0);
-    MYSQL_RES* result;
-    MYSQL_ROW row;
-
-    sscanf(buf + 2, "%[^|]|%s", uName, pWord);
-    char sqlStr[1024] = { 0 };
-    char sendBuf[1024] = { 0 };
-    sprintf(sqlStr, "select password from user where username = '%s'", uName);
-    puts(sqlStr);
-    if (0 != mysql_query(&mysql, sqlStr)) {
-        printf("%s\n", mysql_error(&mysql));
-        return -1;
-    }
-    result = mysql_store_result(&mysql);
-    if ((row = mysql_fetch_row(result))) {
-        if (strcmp(row[0], pWord) == 0) {
-            printf("登陆成功\n");
-            strcpy(sendBuf, "0|success");
-        } else {
-            printf("wrong password\n");
-            strcpy(sendBuf, "1|wrong password");
-            return -1;
-        }
-    } else {
-        printf("unknown username");
-        strcpy(sendBuf, "1|unknown username");
-        return -1;
-    }
-    send(confd, buf, sizeof(buf), 0);
-    return 0;
-}
-
 void* thread_recv(void* arg)
 {
     int i = *(int*)arg;
@@ -62,31 +21,16 @@ void* thread_recv(void* arg)
             // 在clientfd里把自己的置0
             pthread_exit(NULL);
         }
-        printf("recv: %s\n", buf);
-        switch (buf[0]) {
-        case '1':
-            // zhu ce
-            break;
-        case '2':
-            userLogin(buf, confd);
-            break;
-        }
+        printf("recv from client%d: %s\n", i, buf);
+        int to_client;
+        sscanf(buf, "%d|%s", &to_client, buf);
+
+        to_client--;
+        printf("check: to_client:%d: %s\n", to_client, buf);
+        send(clientfd[to_client], buf, sizeof(buf), 0);
     }
 }
-void* thread_send(void* arg)
-{
-    int i = *(int*)arg;
-    int confd = clientfd[i - 1];
-    char buf[1024];
-    while (1) {
-        if (0 == clientfd[i - 1]) {
-            pthread_exit(NULL);
-            // thread_recv里知道客户端下线了
-        }
-        scanf("%s", &buf);
-        send(confd, buf, sizeof(buf), 0);
-    }
-}
+
 int main()
 {
     struct sockaddr_in myaddr;
@@ -101,8 +45,6 @@ int main()
         printf("socket() failed\n");
         return -1;
     }
-    /* bind(lisfd, (struct sockaddr*) &myaddr, sizeof(myaddr))
-   * //给描述符绑定地址（ip、端口） */
     if (0 != bind(lisfd, (struct sockaddr*)&myaddr, sizeof(myaddr))) {
         printf("bind error\n");
         return -1;
@@ -123,8 +65,6 @@ int main()
                 ntohs(cliaddr.sin_port));
             pthread_t tid;
             pthread_create(&tid, NULL, thread_recv, &i);
-            pthread_create(&tid, NULL, thread_send, &i);
-            puts("new recv, send thread created.");
         }
     }
     return 0;
