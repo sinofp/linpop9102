@@ -1,4 +1,7 @@
 #define _GNU_SOURCE
+#define PEE(ERR_MSG) \
+    perror(ERR_MSG); \
+    exit(EXIT_FAILURE)
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -21,17 +24,14 @@ int socket_bind_listen(int port)
 
     int sfd = socket(AF_INET, SOCK_STREAM, 0);
     if (0 == sfd) {
-        perror("socket()");
-        exit(EXIT_FAILURE);
+        PEE("socket");
     }
     /* set non blocking */
     if (-1 == fcntl(sfd, F_SETFL, fcntl(sfd, F_GETFL) | O_NONBLOCK)) {
-        perror("fcntl");
-        exit(EXIT_FAILURE);
+        PEE("fcntl");
     }
     if (0 != bind(sfd, (struct sockaddr*)&myaddr, sizeof myaddr)) {
-        perror("bind");
-        exit(EXIT_FAILURE);
+        PEE("bind");
     }
     listen(sfd, 10);
 
@@ -56,22 +56,19 @@ int main()
 
     epollfd = epoll_create1(0);
     if (epollfd == -1) {
-        perror("epoll_create1");
-        exit(EXIT_FAILURE);
+        PEE("epoll_create1");
     }
 
     ev.events = EPOLLIN;
     ev.data.fd = listen_sock;
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, listen_sock, &ev) == -1) {
-        perror("epoll_ctl: listen_sock");
-        exit(EXIT_FAILURE);
+        PEE("epoll_ctl: listen_sock");
     }
 
     for (;;) {
         nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
         if (nfds == -1) {
-            perror("epoll_wait");
-            exit(EXIT_FAILURE);
+            PEE("epoll_wait");
         }
 
         for (int n = 0; n < nfds; ++n) {
@@ -84,8 +81,7 @@ int main()
                 conn_sock = accept4(listen_sock,
                     (struct sockaddr*)&addr, &addrlen, SOCK_NONBLOCK);
                 if (conn_sock == -1) {
-                    perror("accept");
-                    exit(EXIT_FAILURE);
+                    PEE("accept");
                 }
 
                 printf("client: ip=%s\tport=%d\n", inet_ntoa(addr.sin_addr),
@@ -96,8 +92,7 @@ int main()
                 if (epoll_ctl(epollfd, EPOLL_CTL_ADD, conn_sock,
                         &ev)
                     == -1) {
-                    perror("epoll_ctl: conn_sock");
-                    exit(EXIT_FAILURE);
+                    PEE("epoll_ctl: conn_sock");
                 }
             } else {
                 /* do_use_fd(events[n].data.fd); */
