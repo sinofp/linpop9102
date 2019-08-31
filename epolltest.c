@@ -2,6 +2,9 @@
 #define PEE(ERR_MSG) \
     perror(ERR_MSG); \
     exit(EXIT_FAILURE)
+
+#include "helper.h"
+#include "msg.h"
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -9,8 +12,11 @@
 #include <string.h>
 #include <sys/epoll.h>
 #include <sys/socket.h>
-#include <sys/types.h>
+
 #define MAX_EVENTS 200
+
+Message message;
+
 struct epoll_event ev, events[MAX_EVENTS];
 int listen_sock, conn_sock, nfds, epollfd;
 
@@ -38,21 +44,44 @@ int socket_bind_listen(int port)
     return sfd;
 }
 
+void login(int fd)
+{
+    //todo query db
+    insert_user_fd(message.sendName, fd);
+    message.msgRet = SUCCESS;
+    message.msgType = REPLY;
+    send(fd, &message, sizeof(message), 0);
+}
+
+void mirror()
+{
+    int fd = locate_user_fd(message.recvName);
+    send(fd, &message, sizeof(message), 0);
+}
+
 void echo(int confd)
 {
-    char buf[1024] = { 0 };
-    if (0 == recv(confd, buf, sizeof buf, 0)) {
-        puts("recieved 0 from conn");
+    if (0 == recv(confd, &message, sizeof message, 0)) {
+        puts("received 0 from conn");
         return;
     }
 
-    printf("recv %s\n", buf);
-    send(confd, buf, sizeof buf, 0);
+    printf("\033[46;31m---recv:\033[0m\n");
+    printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
+
+    switch (message.msgType) {
+    case LOGIN:
+        login(confd);
+        break;
+    case PERSONAL_CHAT:
+        mirror();
+        break;
+    }
 }
 
 int main()
 {
-    int listen_sock = socket_bind_listen(1234);
+    listen_sock = socket_bind_listen(1234);
 
     epollfd = epoll_create1(0);
     if (epollfd == -1) {
@@ -84,7 +113,7 @@ int main()
                     PEE("accept");
                 }
 
-                printf("client: ip=%s\tport=%d\n", inet_ntoa(addr.sin_addr),
+                printf("\033[46;31mclient: ip=%s\tport=%d\033[0m\n", inet_ntoa(addr.sin_addr),
                     ntohs(addr.sin_port));
 
                 ev.events = EPOLLIN | EPOLLET;
@@ -97,6 +126,8 @@ int main()
             } else {
                 /* do_use_fd(events[n].data.fd); */
                 echo(events[n].data.fd);
+                //https://github.com/shineyr/Socket/blob/master/epoll_socket/server.c
+                //todo 需要修改epoll event么？
             }
         }
     }
