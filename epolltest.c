@@ -1,12 +1,13 @@
+#define _GNU_SOURCE
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/epoll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#define MAX_EVENTS 10
-
+#define MAX_EVENTS 200
 struct epoll_event ev, events[MAX_EVENTS];
 int listen_sock, conn_sock, nfds, epollfd;
 
@@ -21,6 +22,11 @@ int socket_bind_listen(int port)
     int sfd = socket(AF_INET, SOCK_STREAM, 0);
     if (0 == sfd) {
         perror("socket()");
+        exit(EXIT_FAILURE);
+    }
+    /* set non blocking */
+    if (-1 == fcntl(sfd, F_SETFL, fcntl(sfd, F_GETFL) | O_NONBLOCK)) {
+        perror("fcntl");
         exit(EXIT_FAILURE);
     }
     if (0 != bind(sfd, (struct sockaddr*)&myaddr, sizeof myaddr)) {
@@ -74,8 +80,9 @@ int main()
                 struct sockaddr_in addr;
                 socklen_t addrlen = sizeof addr;
 
-                conn_sock = accept(listen_sock,
-                    (struct sockaddr*)&addr, &addrlen);
+                /* https://stackoverflow.com/a/22339017 */
+                conn_sock = accept4(listen_sock,
+                    (struct sockaddr*)&addr, &addrlen, SOCK_NONBLOCK);
                 if (conn_sock == -1) {
                     perror("accept");
                     exit(EXIT_FAILURE);
@@ -83,8 +90,7 @@ int main()
 
                 printf("client: ip=%s\tport=%d\n", inet_ntoa(addr.sin_addr),
                     ntohs(addr.sin_port));
-                /* ??????? */
-                /* setnonblocking(conn_sock); */
+
                 ev.events = EPOLLIN | EPOLLET;
                 ev.data.fd = conn_sock;
                 if (epoll_ctl(epollfd, EPOLL_CTL_ADD, conn_sock,
