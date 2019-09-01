@@ -10,7 +10,8 @@ int main(int argc, char* argv[])
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("utf8"));
     sock.connectToHost("127.0.0.1", 1234);
     //todo socket错误处理
-    Widget w;
+//    Widget w;
+    MainWindow w;
     w.show();
 
     return a.exec();
