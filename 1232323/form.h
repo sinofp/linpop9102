@@ -6,7 +6,7 @@
 #include <QTcpSocket>
 #include <QWidget>
 #include <QtGui>
-#include <QtNetwork>
+#include "widget.h"
 namespace Ui {
 class Form;
 }
@@ -16,7 +16,6 @@ class Form : public QWidget {
 
 public:
     explicit Form(QWidget* parent = nullptr);
-    // Form(QTcpSocket *sock,QWidget *parent = nullptr);
     ~Form();
 
 private slots:
@@ -25,7 +24,6 @@ private slots:
 
 private:
     Ui::Form* ui;
-    QTcpSocket confd;
 };
 
 #endif // FORM_H

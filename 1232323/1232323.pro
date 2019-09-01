@@ -34,6 +34,7 @@ SOURCES += \
 HEADERS += \
         dialog.h \
         form.h \
+        gv.h \
         mainwindow.h \
         widget.h
 
