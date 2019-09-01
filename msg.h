@@ -1,4 +1,5 @@
 #include <netinet/in.h>
+#include <stdint.h>
 
 #ifndef RADIOACTIVITY_REDAE_H
 #define RADIOACTIVITY_REDAE_H
@@ -16,8 +17,8 @@ enum MessageType {
     RESULT, /*结果消息类型*/
     UNKONWN, /*未知请求类型*/
     REPLY, // 服务器返回的
-    FL,//提醒接受文件
-    FL_CONTENT//文件内容
+    FL, //提醒接受文件
+    FL_CONTENT //文件内容
 };
 
 /*定义操作结果 */
@@ -35,18 +36,22 @@ enum StateRet {
     MESSAGE_SELF //消息对象不能选择自己
 };
 
+// 设置结构体字节对齐，否则windows、linux可能不一样
+// https://www.jianshu.com/p/d994731f658d
+#pragma pack(push, 4)
 /*定义服务器 -- 客户端 消息传送结构体*/
 typedef struct _Message {
     char content[CONTENT_SIZE]; /*针对聊天类型的消息，填充该字段*/
-    int msgType; /*消息类型 即为MessageType中的值*/
-    int msgRet; /*针对操作结果类型的消息，填充该字段*/
+    int8_t msgType; /*消息类型 即为MessageType中的值*/
+    int8_t msgRet; /*针对操作结果类型的消息，填充该字段*/
     struct sockaddr_in sendAddr; /*发送者IP*/
     struct sockaddr_in recvAddr;
     char sendName[20]; /*发送者名称*/
     char recvName[20]; /*接收者名称*/
     char msgTime[20]; /*消息发送时间*/
-    char fileName[FILE_NAME_MAX];/*发送的文件名*/
+    char fileName[FILE_NAME_MAX]; /*发送的文件名*/
 } Message;
+#pragma pack(pop)
 
 //有用么？接受直接用message，发送用的buf只是为了命令行选择登录还是私聊
 #define BUF_SIZE sizeof(Message) / sizeof(char)
