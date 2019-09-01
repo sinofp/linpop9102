@@ -1,6 +1,6 @@
 #include "widget.h"
-#include "ui_widget.h"
 #include "gv.h"
+#include "ui_widget.h"
 Widget::Widget(QWidget* parent)
     : QWidget(parent)
     , ui(new Ui::Widget)
@@ -11,11 +11,6 @@ Widget::Widget(QWidget* parent)
     connect(&sock, SIGNAL(readyRead()), this, SLOT(ret()));
 }
 
-//void Widget::connect_socket() {
-//    connect(&sock, SIGNAL(connected()), ui->wi, SLOT(with()));
-//    connect(&sock, SIGNAL(readyRead()), this, SLOT(ret()));
-//}
-
 Widget::~Widget()
 {
     delete ui;
@@ -23,8 +18,8 @@ Widget::~Widget()
 
 void Widget::on_pushButton_clicked() //登录槽
 {
-//    if (QAbstractSocket::SocketError(close()))
-//        sock.connectToHost("127.0.0.1", 1234);
+    //    if (QAbstractSocket::SocketError(close()))
+    //        sock.connectToHost("127.0.0.1", 1234);
     QString uName = ui->lineEdit->text();
     QString pWord = ui->lineEdit_2->text();
     if (uName.isEmpty()) {
@@ -52,7 +47,7 @@ void Widget::on_pushButton_2_clicked() //创建槽
     // 把connect过的socket方法全都解绑
     disconnect(&sock, SIGNAL(connected()), this, SLOT(with()));
     disconnect(&sock, SIGNAL(readyRead()), this, SLOT(ret()));
-    this->close();//hide? 问题是回到它怎么绑定socket，干脆再执行一遍构造函数好了
+    this->close(); //hide? 问题是回到它怎么绑定socket，干脆再执行一遍构造函数好了
 }
 void Widget::get()
 {
@@ -74,5 +69,16 @@ void Widget::ret() //返回信息
     } else //这里当与正式服务端相连时变更
     {
         QMessageBox::warning(this, "错误", slist.at(1));
+    }
+}
+
+void Widget::on_lineEdit_editingFinished()
+{
+    QString user_name = ui->lineEdit->text();
+    if (user_name.isEmpty()) {
+        ui->avatar_label->hide();
+    } else {
+        ui->avatar_label->setPixmap(QPixmap::fromImage(gen_idcon(user_name).scaled(ui->avatar_label->size())));
+        ui->avatar_label->show();
     }
 }

@@ -27,6 +27,7 @@ CONFIG += c++11
 SOURCES += \
         dialog.cpp \
         form.cpp \
+        identicon.cpp \
         main.cpp \
         mainwindow.cpp \
         widget.cpp

@@ -19,7 +19,6 @@ class Widget : public QWidget {
 public:
     explicit Widget(QWidget* parent = nullptr);
     ~Widget();
-    static void connect_socket();
 
 private slots:
     void on_pushButton_clicked();
@@ -27,6 +26,8 @@ private slots:
     void with();
     void ret();
     void get();
+
+    void on_lineEdit_editingFinished();
 
 private:
     Ui::Widget* ui;

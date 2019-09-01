@@ -1,12 +1,12 @@
 #ifndef FORM_H
 #define FORM_H
 
+#include "widget.h"
 #include <QDebug>
 #include <QMessageBox>
 #include <QTcpSocket>
 #include <QWidget>
 #include <QtGui>
-#include "widget.h"
 namespace Ui {
 class Form;
 }

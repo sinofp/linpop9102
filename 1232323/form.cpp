@@ -1,6 +1,6 @@
 #include "form.h"
-#include "ui_form.h"
 #include "gv.h"
+#include "ui_form.h"
 
 Form::Form(QWidget* parent)
     : QWidget(parent)
@@ -45,9 +45,9 @@ void Form::ret()
     if (slist.at(0) == "0") {
         QMessageBox::information(this, "恭喜", "注册成功.");
         disconnect(&sock, SIGNAL(readyRead()), this, SLOT(ret()));
-        Widget *w = new Widget();
+        Widget* w = new Widget();
         w->show();
-        this->close();//hide?
+        this->close(); //hide?
     } else {
         QMessageBox::information(this, "很遗憾", "注册失败,请修改用户名");
     }
