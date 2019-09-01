@@ -1,10 +1,15 @@
+#include "gv.h"
 #include "widget.h"
 #include <QApplication>
+#include <QTcpSocket>
 
-int main(int argc, char *argv[])
+QTcpSocket sock;
+int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("utf8"));
+    sock.connectToHost("127.0.0.1", 1234);
+    //todo socket错误处理
     Widget w;
     w.show();
 

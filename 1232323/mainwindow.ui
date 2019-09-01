@@ -89,7 +89,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>PushButton</string>
+     <string>加好友</string>
     </property>
    </widget>
    <widget class="QTextEdit" name="textEdit">
