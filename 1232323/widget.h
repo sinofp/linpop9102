@@ -1,24 +1,23 @@
 #ifndef WIDGET_H
 #define WIDGET_H
-#include"mainwindow.h"
-#include"form.h"
-#include <QWidget>
-#include<QDebug>
-#include<QtNetwork>
-#include<QMessageBox>
-#include <QTextCodec>
+#include "form.h"
+#include "mainwindow.h"
+#include <QDebug>
+#include <QMessageBox>
 #include <QTcpSocket>
+#include <QTextCodec>
+#include <QWidget>
 #include <QtGui>
+#include <QtNetwork>
 namespace Ui {
 class Widget;
 }
 
-class Widget : public QWidget
-{
+class Widget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit Widget(QWidget *parent = nullptr);
+    explicit Widget(QWidget* parent = nullptr);
     ~Widget();
 
 private slots:
@@ -27,9 +26,10 @@ private slots:
     void with();
     void ret();
     void get();
+
 private:
-    Ui::Widget *ui;
-   QTcpSocket sock;
+    Ui::Widget* ui;
+    QTcpSocket sock;
 };
 
 #endif // WIDGET_H
