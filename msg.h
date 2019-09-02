@@ -7,7 +7,7 @@
 #define FILE_NAME_MAX 2048
 enum MessageType {
     REGISTER = 1, /*注册请求*/
-    LOGIN, /*登陆请求*/
+    LOGIN=0, /*登陆请求*/
     HELP, /*帮助请求*/
     EXIT, /*退出请求*/
     VIEW_USER_LIST, /*查看在线列表*/
