@@ -73,6 +73,7 @@ int main()
                 //接收进程
                 memset(&message, 0, sizeof(message));
                 recv(sockfd, &message, sizeof(message), 0);
+                printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
                 // buf只用来发送时解包
                 //                printf("---recv:\n");
                 //                write(STDOUT_FILENO, buf, sizeof(buf));

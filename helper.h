@@ -1,5 +1,9 @@
 #ifndef RADIOACTIVITY_HELPER_H
 #define RADIOACTIVITY_HELPER_H
+
+#include "msg.h"
+extern Message message;
+
 //https://isocpp.org/wiki/faq/mixing-c-and-cpp#include-c-hdrs-personal
 #ifdef __cplusplus
 extern "C" {
@@ -8,7 +12,8 @@ extern "C" {
 int locate_user_fd(char name[20]);
 void insert_user_fd(char name[20], int fd);
 void delete_user_fd(char name[20]);
-void broadcast_loginout(char name[20], int action);
+void broadcast_loginout();
+void send_current_online(int fd);
 
 #ifdef __cplusplus
 }

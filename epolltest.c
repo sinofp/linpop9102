@@ -4,7 +4,6 @@
     exit(EXIT_FAILURE)
 
 #include "helper.h"
-#include "msg.h"
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -44,6 +43,14 @@ int socket_bind_listen(int port)
     return sfd;
 }
 
+void reg(int fd)
+{
+    //todo 插入数据库
+    message.msgType = REPLY;
+    message.msgRet = SUCCESS;
+    send(fd, &message, sizeof(message), 0);
+}
+
 void login(int fd)
 {
     //todo query db
@@ -51,27 +58,33 @@ void login(int fd)
     // 一致：插入，回复成功，回复好友信息，回复当前在线人（遍历user——map），
     // 给所有人发一遍你上线了
     // 不一致：回复不成功
-    char secret[70]; // sha256后应该只有64位
+    char secret[70] = "123"; // sha256后应该只有64位
     if (0 == strlen(secret) || 0 != strcmp(message.content, secret)) {
         //没有此用户，会给密码置空（memset）
         message.msgType = REPLY;
         message.msgRet = FAILED;
         strcpy(message.content, "账号或密码错误");
+        send(fd, &message, sizeof(message), 0);
     } else {
-        broadcast_loginout(message.sendName, LOGIN);
-        insert_user_fd(message.sendName, fd);
+        broadcast_loginout();
+
         message.msgRet = SUCCESS;
         message.msgType = REPLY;
-        //todo 得到好友列表，存在message.content里：好友名字，好友类型|好友名字，好友类型...
+        //todo 得到好友列表，存在message.content里：好友名字，好友类型|好友名字，好友类型|...
+        send(fd, &message, sizeof(message), 0);
+
+        message.msgType = VIEW_USER_LIST;
+        //todo 得到在线用户列表，存在message.content里：好友名字|好友名字|...
+        send_current_online(fd);
+
+        insert_user_fd(message.sendName, fd);
     }
-    // 需要分开发么？登陆成功和好友列表
-    send(fd, &message, sizeof(message), 0);
 }
 
 void logout()
 {
     delete_user_fd(message.sendName);
-    broadcast_loginout(message.sendName, EXIT);
+    broadcast_loginout();
 }
 
 // message.msgType: ADD_FRIEND / REMOVE_FRIEND, 这应该是客户端发来就写好的
@@ -106,6 +119,9 @@ void echo(int confd)
     printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
 
     switch (message.msgType) {
+    case REGISTER:
+        reg(confd);
+        break;
     case LOGIN:
         login(confd);
         break;
@@ -113,7 +129,7 @@ void echo(int confd)
         mirror();
         break;
     case ADD_FRIEND:
-    case REMOVE_FRIEND:
+    case DELETE_FRIEND:
         add_remove_friend();
         break;
     case EXIT:
