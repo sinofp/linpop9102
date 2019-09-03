@@ -7,6 +7,8 @@ extern "C" {
 
 int locate_user_fd(char name[20]);
 void insert_user_fd(char name[20], int fd);
+void delete_user_fd(char name[20]);
+void broadcast_loginout(char name[20], int action);
 
 #ifdef __cplusplus
 }
