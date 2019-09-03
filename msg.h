@@ -18,7 +18,10 @@ enum MessageType {
     UNKONWN, /*未知请求类型*/
     REPLY, // 服务器返回的
     FL, //提醒接受文件
-    FL_CONTENT //文件内容
+    FL_CONTENT, //文件内容
+    ADD_FRIEND, //添加好友
+    DELETE_FRIEND, //删除好友
+    MOVE_FRIEND //变更好友分组
 };
 
 /*定义操作结果 */
