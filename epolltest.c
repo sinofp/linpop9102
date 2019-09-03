@@ -47,9 +47,45 @@ int socket_bind_listen(int port)
 void login(int fd)
 {
     //todo query db
-    insert_user_fd(message.sendName, fd);
-    message.msgRet = SUCCESS;
-    message.msgType = REPLY;
+    // 根据用户名，得到哈希过的密码，对比和message.content一不一致
+    // 一致：插入，回复成功，回复好友信息，回复当前在线人（遍历user——map），
+    // 给所有人发一遍你上线了
+    // 不一致：回复不成功
+    char secret[70]; // sha256后应该只有64位
+    if (0 == strlen(secret) || 0 != strcmp(message.content, secret)) {
+        //没有此用户，会给密码置空（memset）
+        message.msgType = REPLY;
+        message.msgRet = FAILED;
+        strcpy(message.content, "账号或密码错误");
+    } else {
+        broadcast_loginout(message.sendName, LOGIN);
+        insert_user_fd(message.sendName, fd);
+        message.msgRet = SUCCESS;
+        message.msgType = REPLY;
+        //todo 得到好友列表，存在message.content里：好友名字，好友类型|好友名字，好友类型...
+    }
+    // 需要分开发么？登陆成功和好友列表
+    send(fd, &message, sizeof(message), 0);
+}
+
+void logout()
+{
+    delete_user_fd(message.sendName);
+    broadcast_loginout(message.sendName, EXIT);
+}
+
+// message.msgType: ADD_FRIEND / REMOVE_FRIEND, 这应该是客户端发来就写好的
+void add_remove_friend()
+{
+    //todo 数据库添加
+    //    switch (message.msgType) {
+    //        case ADD_FRIEND:sql_add_friend(char sendName[20], char recvName[20]);
+    //            break;
+    //        case REMOVE_FRIEND:sql_remove_friend(char sendName[20], char recvName[20]);;
+    //            break;
+    //    }
+    //不需要问对面同不同意，直接更新数据库，然后向被加的人发信息更新好友列表
+    int fd = locate_user_fd(message.recvName);
     send(fd, &message, sizeof(message), 0);
 }
 
@@ -75,6 +111,13 @@ void echo(int confd)
         break;
     case PERSONAL_CHAT:
         mirror();
+        break;
+    case ADD_FRIEND:
+    case REMOVE_FRIEND:
+        add_remove_friend();
+        break;
+    case EXIT:
+        logout();
         break;
     }
 }
