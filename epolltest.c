@@ -59,6 +59,7 @@ void login(int fd)
     // 给所有人发一遍你上线了
     // 不一致：回复不成功
     char secret[70] = "123"; // sha256后应该只有64位
+    //todo 先strcpy到secret，再调查的函数，他的真密码会写在message.content里
     if (0 == strlen(secret) || 0 != strcmp(message.content, secret)) {
         //没有此用户，会给密码置空（memset）
         message.msgType = REPLY;
@@ -108,6 +109,11 @@ void mirror()
     send(fd, &message, sizeof(message), 0);
 }
 
+void alter_friend()
+{
+    //todo 在数据库中更改好友类型，根据message.conent
+}
+
 void echo(int confd)
 {
     if (0 == recv(confd, &message, sizeof message, 0)) {
@@ -134,6 +140,9 @@ void echo(int confd)
         break;
     case EXIT:
         logout();
+        break;
+    case MOVE_FRIEND:
+        alter_friend();
         break;
     }
 }
