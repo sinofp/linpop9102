@@ -33,6 +33,22 @@ void send1()
     send(sockfd, &message, sizeof(message), 0);
 }
 
+void reg() {
+    memset(&message, 0, sizeof message);
+    sscanf(buf + 2, "%[^|]|%s", my_name, message.content);
+    strcpy(message.sendName, my_name);
+    message.msgType = REGISTER;
+    send(sockfd, &message, sizeof message, 0);
+}
+
+void alter() {
+    memset(&message, 0, sizeof message);
+    sscanf(buf + 2, "%[^|]|%s", message.recvName, message.content);
+    strcpy(message.sendName, my_name);
+    message.msgType = MOVE_FRIEND;
+    send(sockfd, &message, sizeof message, 0);  
+}
+
 int main()
 {
     struct sockaddr_in sevaddr;
@@ -49,8 +65,10 @@ int main()
         return -1;
     }
 
-    puts("0|<name>|passwd to login");
+    puts("0|<name>|<passwd> to login");
     puts("1|<recv_name>|<msg> to send msg");
+    puts("2|<name>|<passwd> to register");
+    puts("3|<friend_name>|<0 or 1> to alter friend_name status to 0 or 1");
 
     if (0 == connect(sockfd, (struct sockaddr*)&sevaddr, sizeof(sevaddr))) {
         pid_t pid = fork();
@@ -61,10 +79,16 @@ int main()
                 scanf("%s", buf);
                 switch (buf[0]) {
                 case '0':
-                    login(buf);
+                    login();
                     break;
                 case '1':
-                    send1(buf);
+                    send1();
+                    break;
+                case '2':
+                    reg();
+                    break;
+                case '3':
+                    alter();
                     break;
                 }
             }

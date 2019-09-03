@@ -99,9 +99,13 @@ int db_mvf(Message *msg)
 {
     char sqlStr[1024]={0};
 
-    sprintf(sqlStr, "update friend set f_type2=%s where f_name1='%s' and f_name2='%s' union update friend set f_type1=%s where f_name2='%s' and f_name1='%s'", 
-    msg->content, msg->sendName, msg->recvName, msg->content, msg->sendName, msg->recvName);
-    //puts(sqlStr);
+    sprintf(sqlStr, "update friend set f_type2=%s where f_name1='%s' and f_name2='%s'", msg->content, msg->sendName, msg->recvName);
+    if(mysql_query(&mysql, sqlStr)!=0){
+        printf("%s\n",mysql_error(&mysql));
+	    return -1;
+    }
+
+    sprintf(sqlStr, "update friend set f_type1=%s where f_name2='%s' and f_name1='%s'", msg->content, msg->sendName, msg->recvName);
     if(mysql_query(&mysql, sqlStr)!=0){
         printf("%s\n",mysql_error(&mysql));
 	    return -1;

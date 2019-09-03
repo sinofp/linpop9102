@@ -11,10 +11,16 @@
 #include <string.h>
 #include <sys/epoll.h>
 #include <sys/socket.h>
+#include "database.h"
+#include <mysql/mysql.h>
 
 #define MAX_EVENTS 200
 
 Message message;
+
+MYSQL mysql;
+MYSQL_RES *result;
+MYSQL_ROW  row;
 
 struct epoll_event ev, events[MAX_EVENTS];
 int listen_sock, conn_sock, nfds, epollfd;
@@ -45,7 +51,7 @@ int socket_bind_listen(int port)
 
 void reg(int fd)
 {
-    //todo 插入数据库
+    db_register(&message);//插入数据库
     message.msgType = REPLY;
     message.msgRet = SUCCESS;
     send(fd, &message, sizeof(message), 0);
@@ -53,14 +59,18 @@ void reg(int fd)
 
 void login(int fd)
 {
-    //todo query db
+    char secret[70] = "123"; // sha256后应该只有64位
+    //先strcpy到secret，再调 查的函数，他的真密码会写在message.content里
+    strcpy(secret, message.content);
+
+    db_login(&message);
     // 根据用户名，得到哈希过的密码，对比和message.content一不一致
     // 一致：插入，回复成功，回复好友信息，回复当前在线人（遍历user——map），
     // 给所有人发一遍你上线了
     // 不一致：回复不成功
-    char secret[70] = "123"; // sha256后应该只有64位
-    //todo 先strcpy到secret，再调查的函数，他的真密码会写在message.content里
-    if (0 == strlen(secret) || 0 != strcmp(message.content, secret)) {
+
+    
+    if (0 == strlen(message.content) || 0 != strcmp(message.content, secret)) {
         //没有此用户，会给密码置空（memset）
         message.msgType = REPLY;
         message.msgRet = FAILED;
@@ -71,11 +81,11 @@ void login(int fd)
 
         message.msgRet = SUCCESS;
         message.msgType = REPLY;
-        //todo 得到好友列表，存在message.content里：好友名字，好友类型|好友名字，好友类型|...
+        db_list(&message);//得到好友列表，存在message.content里：好友名字，好友类型|好友名字，好友类型|...
         send(fd, &message, sizeof(message), 0);
 
         message.msgType = VIEW_USER_LIST;
-        //todo 得到在线用户列表，存在message.content里：好友名字|好友名字|...
+        //得到在线用户列表，存在message.content里：好友名字|好友名字|...
         send_current_online(fd);
 
         insert_user_fd(message.sendName, fd);
@@ -91,13 +101,12 @@ void logout()
 // message.msgType: ADD_FRIEND / REMOVE_FRIEND, 这应该是客户端发来就写好的
 void add_remove_friend()
 {
-    //todo 数据库添加
-    //    switch (message.msgType) {
-    //        case ADD_FRIEND:sql_add_friend(char sendName[20], char recvName[20]);
-    //            break;
-    //        case REMOVE_FRIEND:sql_remove_friend(char sendName[20], char recvName[20]);;
-    //            break;
-    //    }
+    switch (message.msgType) {
+        case ADD_FRIEND: db_addf(&message);
+            break;
+        case DELETE_FRIEND: db_delf(&message);
+            break;
+    }
     //不需要问对面同不同意，直接更新数据库，然后向被加的人发信息更新好友列表
     int fd = locate_user_fd(message.recvName);
     send(fd, &message, sizeof(message), 0);
@@ -111,7 +120,7 @@ void mirror()
 
 void alter_friend()
 {
-    //todo 在数据库中更改好友类型，根据message.conent
+    db_mvf(&message);
 }
 
 void echo(int confd)
@@ -149,6 +158,12 @@ void echo(int confd)
 
 int main()
 {
+    mysql_init(&mysql); //初始化mysql结构
+    if(mysql_real_connect(&mysql, "localhost", "root", NULL, "chatroom", 0, NULL, 0)==NULL){
+        printf("%s\n", mysql_error(&mysql));
+        return -1;
+    }
+
     listen_sock = socket_bind_listen(1234);
 
     epollfd = epoll_create1(0);
@@ -199,4 +214,5 @@ int main()
             }
         }
     }
+    mysql_close(&mysql);
 }

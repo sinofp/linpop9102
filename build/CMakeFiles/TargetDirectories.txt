@@ -1,0 +1,4 @@
+/home/parallels/qq/build/CMakeFiles/rebuild_cache.dir
+/home/parallels/qq/build/CMakeFiles/edit_cache.dir
+/home/parallels/qq/build/CMakeFiles/qq.dir
+/home/parallels/qq/build/CMakeFiles/client.dir
