@@ -14,6 +14,7 @@ void insert_user_fd(char name[20], int fd);
 void delete_user_fd(char name[20]);
 void broadcast_loginout();
 void send_current_online(int fd);
+int user_already_online();
 
 #ifdef __cplusplus
 }

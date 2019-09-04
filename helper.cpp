@@ -52,3 +52,8 @@ void send_current_online(int fd)
     message.msgType = VIEW_USER_LIST;
     send(fd, &message, sizeof(message), 0);
 }
+
+int user_already_online() {
+    it = user_map.find(message.sendName);
+    return it == user_map.end();
+}

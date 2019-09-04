@@ -59,6 +59,13 @@ void reg(int fd)
 
 void login(int fd)
 {
+    // 首先遍历在线列表，如果当前用户已在线，直接返回错误信息；
+    if (user_already_online()) {
+        message.msgType = REPLY;
+        message.msgRet = FAILED;
+        strcpy(message.content, "此用户已在线，请殴打冒用账号人再重试");
+        send(fd, &message, sizeof(message), 0);
+    }
     char secret[70] = "123"; // sha256后应该只有64位
     //先strcpy到secret，再调 查的函数，他的真密码会写在message.content里
     strcpy(secret, message.content);
@@ -214,5 +221,4 @@ int main()
             }
         }
     }
-    mysql_close(&mysql);
 }
