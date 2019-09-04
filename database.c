@@ -67,7 +67,8 @@ int db_list(Message *msg)
     for(int i=0; i<result->row_count; i++){
         row=mysql_fetch_row(result);
         memset(tmp, 0, sizeof(tmp));
-        sprintf(tmp, "%s,%s,%s|", row[0], row[1]);//好友姓名，好友在该用户列表中的类型
+        sprintf(tmp, "%s,%s|", row[0], row[1]);//好友姓名，好友在该用户列表中的类型
+        strcat(msg->content, tmp);
     }
     mysql_free_result(result);
 }
@@ -87,8 +88,13 @@ int db_delf(Message *msg)
 {
     char sqlStr[1024]={0};
 
-    sprintf(sqlStr, "delete from friend where f_name1='%s' and f_name2='%s' union delete from friend where f_name2='%s' and f_name1='%s'", msg->sendName, msg->recvName, msg->sendName, msg->recvName);
-    //puts(sqlStr);
+    sprintf(sqlStr, "delete from friend where f_name1='%s' and f_name2='%s'" ,msg->sendName, msg->recvName);
+    if(mysql_query(&mysql, sqlStr)!=0){
+        printf("%s\n",mysql_error(&mysql));
+	    return -1;
+    }
+
+    sprintf(sqlStr, "delete from friend where f_name2='%s' and f_name1='%s'", msg->sendName, msg->recvName);
     if(mysql_query(&mysql, sqlStr)!=0){
         printf("%s\n",mysql_error(&mysql));
 	    return -1;

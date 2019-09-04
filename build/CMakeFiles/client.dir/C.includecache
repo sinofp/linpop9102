@@ -25,6 +25,10 @@ sys/socket.h
 -
 sys/types.h
 -
+sys/prctl.h
+-
 unistd.h
+-
+signal.h
 -
 

@@ -4,12 +4,16 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/prctl.h>
 #include <unistd.h>
+#include <signal.h>
 
 int sockfd;
 char buf[BUF_SIZE];
 char my_name[20];
 Message message;
+
+int volatile still_running = 1;
 
 void login()
 {
@@ -49,6 +53,37 @@ void alter() {
     send(sockfd, &message, sizeof message, 0);  
 }
 
+void add_friend() {
+    memset(&message, 0, sizeof message);
+    sscanf(buf + 2, "%[^|]|%s", message.recvName, message.content);
+    strcpy(message.sendName, my_name);
+    message.msgType = ADD_FRIEND;
+    send(sockfd, &message, sizeof message, 0);
+}
+
+void delete_friend() {
+    memset(&message, 0, sizeof message);
+    sscanf(buf + 2, "%[^|]|%s", message.recvName, message.content);
+    strcpy(message.sendName, my_name);
+    message.msgType = DELETE_FRIEND;
+    send(sockfd, &message, sizeof message, 0);    
+}
+
+void logout() {
+    memset(&message, 0, sizeof message);
+    strcpy(message.sendName, my_name);
+    message.msgType = EXIT;
+    send(sockfd, &message, sizeof message, 0);
+    exit(0);       
+}
+
+void handle_signal(int signo) {
+    if (SIGHUP == signo) {
+        puts("child recv SIGHUP");
+        still_running = 0;
+    }
+}
+
 int main()
 {
     struct sockaddr_in sevaddr;
@@ -69,6 +104,9 @@ int main()
     puts("1|<recv_name>|<msg> to send msg");
     puts("2|<name>|<passwd> to register");
     puts("3|<friend_name>|<0 or 1> to alter friend_name status to 0 or 1");
+    puts("a|<friend name> to add friend");
+    puts("d|<friend name> to delete a friend");
+    puts("u to logout");
 
     if (0 == connect(sockfd, (struct sockaddr*)&sevaddr, sizeof(sevaddr))) {
         pid_t pid = fork();
@@ -90,10 +128,21 @@ int main()
                 case '3':
                     alter();
                     break;
+                case 'a':
+                    add_friend();
+                    break;
+                case 'd':
+                    delete_friend();
+                    break;
+                case 'u':
+                    logout();
+                    break;
                 }
             }
         } else if (0 == pid) {
-            while (1) {
+            signal(SIGHUP, handle_signal);
+            prctl(PR_SET_PDEATHSIG, SIGHUP);
+            while (still_running) {
                 //接收进程
                 memset(&message, 0, sizeof(message));
                 recv(sockfd, &message, sizeof(message), 0);
@@ -116,6 +165,7 @@ int main()
                     break;
                 }
             }
+            exit(0);
         } else {
             printf("fork error");
         }
