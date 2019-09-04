@@ -55,5 +55,5 @@ void send_current_online(int fd)
 
 int user_already_online() {
     it = user_map.find(message.sendName);
-    return it == user_map.end();
+    return it != user_map.end();
 }
