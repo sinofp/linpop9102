@@ -1,8 +1,5 @@
-#include <netinet/in.h>
-#include <stdint.h>
-
-#ifndef RADIOACTIVITY_REDAE_H
-#define RADIOACTIVITY_REDAE_H
+#ifndef MSG_H
+#define MSG_H
 #define CONTENT_SIZE 2048
 #define FILE_NAME_MAX 2048
 enum MessageType {
@@ -42,12 +39,10 @@ enum StateRet {
 // 设置结构体字节对齐，否则windows、linux可能不一样
 #pragma pack(push, 4)
 /*定义服务器 -- 客户端 消息传送结构体*/
-typedef struct _Message {
+typedef struct Message {
     char content[CONTENT_SIZE]; /*针对聊天类型的消息，填充该字段*/
-    int8_t msgType; /*消息类型 即为MessageType中的值*/
-    int8_t msgRet; /*针对操作结果类型的消息，填充该字段*/
-    struct sockaddr_in sendAddr; /*发送者IP*/
-    struct sockaddr_in recvAddr;
+    int msgType; /*消息类型 即为MessageType中的值*/
+    int msgRet; /*针对操作结果类型的消息，填充该字段*/
     char sendName[20]; /*发送者名称*/
     char recvName[20]; /*接收者名称*/
     char msgTime[20]; /*消息发送时间*/

@@ -95,13 +95,19 @@ void login(int fd)
 
         message.msgRet = SUCCESS;
         message.msgType = REPLY;
+        printf("\033[42;31m---send:\033[0m\n");
+        printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
+        send(fd, &message, sizeof(message), 0);
+        usleep(10000);
+
+        message.msgType = VIEW_RECORDS;
         db_list(&message); //得到好友列表，存在message.content里：好友名字，好友类型|好友名字，好友类型|...
         printf("\033[42;31m---send:\033[0m\n");
         printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
         send(fd, &message, sizeof(message), 0);
 
         // 睡一觉，否则发太快，客户端socket.readyRead只触发一次
-        usleep(100);
+        usleep(10000);
 
         message.msgType = VIEW_USER_LIST;
         //得到在线用户列表，存在message.content里：好友名字|好友名字|...
@@ -177,6 +183,8 @@ void echo(int confd)
     case LOGIN:
         login(confd);
         break;
+        case FL:
+        case FL_CONTENT:
     case PERSONAL_CHAT:
         mirror();
         break;
