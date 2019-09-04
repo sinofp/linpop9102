@@ -65,6 +65,7 @@ void login(int fd)
         message.msgRet = FAILED;
         strcpy(message.content, "此用户已在线，请殴打冒用账号人再重试");
         send(fd, &message, sizeof(message), 0);
+        return;
     }
     char secret[70] = "123"; // sha256后应该只有64位
     //先strcpy到secret，再调 查的函数，他的真密码会写在message.content里
