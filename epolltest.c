@@ -31,7 +31,7 @@ int socket_bind_listen(int port)
     struct sockaddr_in myaddr;
     memset(&myaddr, 0, sizeof myaddr);
     myaddr.sin_family = AF_INET;
-    myaddr.sin_addr.s_addr = inet_addr("192.168.43.201");
+    myaddr.sin_addr.s_addr = inet_addr("0.0.0.0");
     myaddr.sin_port = htons(port);
 
     int sfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -163,7 +163,8 @@ void alter_friend()
 
 void echo(int confd)
 {
-    if (0 == recv(confd, &message, sizeof message, 0)) {
+    int recvlen = recv(confd, &message, sizeof message, 0);
+    if (0 == recvlen) {
         printf("received 0 from %d", confd);
         // force logout
         // hui ba fd duiying de name xie jin sendName
@@ -171,7 +172,8 @@ void echo(int confd)
         message.msgType = EXIT;
         logout();
         return;
-    }
+    } else
+	printf("recved %d\n", recvlen);
 
     printf("\033[46;31m---recv:\033[0m\n");
     printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
