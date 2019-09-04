@@ -163,17 +163,16 @@ void alter_friend()
 
 void echo(int confd)
 {
-    int recvlen = recv(confd, &message, sizeof message, 0);
-    if (0 == recvlen) {
-        printf("received 0 from %d", confd);
-        // force logout
-        // hui ba fd duiying de name xie jin sendName
-        locate_user_name(confd);
-        message.msgType = EXIT;
-        logout();
-        return;
-    } else
-	printf("recved %d\n", recvlen);
+
+    int recv_len = 0;
+    while (1) {
+        recv_len = recv(confd, (&message) + recv_len, sizeof message, 0);
+        printf("recieved %d\t", recv_len);
+        if (0 == recv_len) {
+            // 读完了
+            break;
+        }
+    }
 
     printf("\033[46;31m---recv:\033[0m\n");
     printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
