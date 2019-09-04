@@ -31,7 +31,7 @@ int socket_bind_listen(int port)
     struct sockaddr_in myaddr;
     memset(&myaddr, 0, sizeof myaddr);
     myaddr.sin_family = AF_INET;
-    myaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    myaddr.sin_addr.s_addr = inet_addr("192.168.43.201");
     myaddr.sin_port = htons(port);
 
     int sfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -91,7 +91,7 @@ void login(int fd)
         printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
         send(fd, &message, sizeof(message), 0);
     } else {
-        broadcast_loginout();
+//        broadcast_loginout();
 
         message.msgRet = SUCCESS;
         message.msgType = REPLY;
