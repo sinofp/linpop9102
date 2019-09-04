@@ -54,6 +54,8 @@ void reg(int fd)
     db_register(&message);//插入数据库
     message.msgType = REPLY;
     message.msgRet = SUCCESS;
+    printf("\033[42;31m---rsend:\033[0m\n");
+    printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
     send(fd, &message, sizeof(message), 0);
 }
 
@@ -64,6 +66,8 @@ void login(int fd)
         message.msgType = REPLY;
         message.msgRet = FAILED;
         strcpy(message.content, "此用户已在线，请殴打冒用账号人再重试");
+        printf("\033[42;31m---rsend:\033[0m\n");
+        printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
         send(fd, &message, sizeof(message), 0);
         return;
     }
@@ -83,6 +87,8 @@ void login(int fd)
         message.msgType = REPLY;
         message.msgRet = FAILED;
         strcpy(message.content, "账号或密码错误");
+        printf("\033[42;31m---rsend:\033[0m\n");
+        printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
         send(fd, &message, sizeof(message), 0);
     } else {
         broadcast_loginout();
@@ -90,8 +96,12 @@ void login(int fd)
         message.msgRet = SUCCESS;
         message.msgType = REPLY;
         db_list(&message);//得到好友列表，存在message.content里：好友名字，好友类型|好友名字，好友类型|...
-        send(fd, &message, sizeof(message), 0);
-
+        printf("\033[42;31m---rsend:\033[0m\n");
+        printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
+        int strl = send(fd, &message, sizeof(message), 0);
+        // send(fd, &message, sizeof(message), 0);
+        usleep(100);
+        printf("%d\n", strl);
         message.msgType = VIEW_USER_LIST;
         //得到在线用户列表，存在message.content里：好友名字|好友名字|...
         send_current_online(fd);
@@ -107,22 +117,33 @@ void logout()
 }
 
 // message.msgType: ADD_FRIEND / REMOVE_FRIEND, 这应该是客户端发来就写好的
-void add_remove_friend()
+void add_remove_friend(int fd)
 {
+    int wrong = 0;
     switch (message.msgType) {
-        case ADD_FRIEND: db_addf(&message);
+        case ADD_FRIEND: wrong = db_addf(&message);
             break;
-        case DELETE_FRIEND: db_delf(&message);
+        case DELETE_FRIEND: wrong = db_delf(&message);
             break;
     }
     //不需要问对面同不同意，直接更新数据库，然后向被加的人发信息更新好友列表
-    int fd = locate_user_fd(message.recvName);
+    //todo if !wrong:
+    // fan hui
+    printf("\033[42;31m---rsend:\033[0m\n");
+    printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
+    send(fd, &message, sizeof(message), 0);
+
+    fd = locate_user_fd(message.recvName);
+    printf("\033[42;31m---rsend:\033[0m\n");
+    printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
     send(fd, &message, sizeof(message), 0);
 }
 
 void mirror()
 {
     int fd = locate_user_fd(message.recvName);
+    printf("\033[42;31m---rsend:\033[0m\n");
+    printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
     send(fd, &message, sizeof(message), 0);
 }
 
@@ -134,7 +155,12 @@ void alter_friend()
 void echo(int confd)
 {
     if (0 == recv(confd, &message, sizeof message, 0)) {
-        puts("received 0 from conn");
+        printf("received 0 from %d", confd);
+        // force logout
+        // hui ba fd duiying de name xie jin sendName
+        locate_user_name(confd);
+        message.msgType = EXIT;
+        logout();
         return;
     }
 
@@ -149,13 +175,11 @@ void echo(int confd)
         login(confd);
         break;
     case PERSONAL_CHAT:
-    case FL:
-    case FL_CONTENT:
         mirror();
         break;
     case ADD_FRIEND:
     case DELETE_FRIEND:
-        add_remove_friend();
+        add_remove_friend(confd);
         break;
     case EXIT:
         logout();
