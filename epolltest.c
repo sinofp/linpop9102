@@ -149,6 +149,8 @@ void echo(int confd)
         login(confd);
         break;
     case PERSONAL_CHAT:
+    case FL:
+    case FL_CONTENT:
         mirror();
         break;
     case ADD_FRIEND:
