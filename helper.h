@@ -10,6 +10,7 @@ extern "C" {
 #endif
 
 int locate_user_fd(char name[20]);
+void locate_user_name(int fd);
 void insert_user_fd(char name[20], int fd);
 void delete_user_fd(char name[20]);
 void broadcast_loginout();

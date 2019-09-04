@@ -3,24 +3,24 @@
     perror(ERR_MSG); \
     exit(EXIT_FAILURE)
 
+#include "database.h"
 #include "helper.h"
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <mysql/mysql.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/epoll.h>
 #include <sys/socket.h>
-#include "database.h"
-#include <mysql/mysql.h>
 
 #define MAX_EVENTS 200
 
 Message message;
 
 MYSQL mysql;
-MYSQL_RES *result;
-MYSQL_ROW  row;
+MYSQL_RES* result;
+MYSQL_ROW row;
 
 struct epoll_event ev, events[MAX_EVENTS];
 int listen_sock, conn_sock, nfds, epollfd;
@@ -51,10 +51,10 @@ int socket_bind_listen(int port)
 
 void reg(int fd)
 {
-    db_register(&message);//插入数据库
+    db_register(&message); //插入数据库
     message.msgType = REPLY;
     message.msgRet = SUCCESS;
-    printf("\033[42;31m---rsend:\033[0m\n");
+    printf("\033[42;31m---send:\033[0m\n");
     printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
     send(fd, &message, sizeof(message), 0);
 }
@@ -66,7 +66,7 @@ void login(int fd)
         message.msgType = REPLY;
         message.msgRet = FAILED;
         strcpy(message.content, "此用户已在线，请殴打冒用账号人再重试");
-        printf("\033[42;31m---rsend:\033[0m\n");
+        printf("\033[42;31m---send:\033[0m\n");
         printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
         send(fd, &message, sizeof(message), 0);
         return;
@@ -81,13 +81,12 @@ void login(int fd)
     // 给所有人发一遍你上线了
     // 不一致：回复不成功
 
-    
     if (0 == strlen(message.content) || 0 != strcmp(message.content, secret)) {
         //没有此用户，会给密码置空（memset）
         message.msgType = REPLY;
         message.msgRet = FAILED;
         strcpy(message.content, "账号或密码错误");
-        printf("\033[42;31m---rsend:\033[0m\n");
+        printf("\033[42;31m---send:\033[0m\n");
         printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
         send(fd, &message, sizeof(message), 0);
     } else {
@@ -95,13 +94,14 @@ void login(int fd)
 
         message.msgRet = SUCCESS;
         message.msgType = REPLY;
-        db_list(&message);//得到好友列表，存在message.content里：好友名字，好友类型|好友名字，好友类型|...
-        printf("\033[42;31m---rsend:\033[0m\n");
+        db_list(&message); //得到好友列表，存在message.content里：好友名字，好友类型|好友名字，好友类型|...
+        printf("\033[42;31m---send:\033[0m\n");
         printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
-        int strl = send(fd, &message, sizeof(message), 0);
-        // send(fd, &message, sizeof(message), 0);
+        send(fd, &message, sizeof(message), 0);
+
+        // 睡一觉，否则发太快，客户端socket.readyRead只触发一次
         usleep(100);
-        printf("%d\n", strl);
+
         message.msgType = VIEW_USER_LIST;
         //得到在线用户列表，存在message.content里：好友名字|好友名字|...
         send_current_online(fd);
@@ -121,20 +121,22 @@ void add_remove_friend(int fd)
 {
     int wrong = 0;
     switch (message.msgType) {
-        case ADD_FRIEND: wrong = db_addf(&message);
-            break;
-        case DELETE_FRIEND: wrong = db_delf(&message);
-            break;
+    case ADD_FRIEND:
+        wrong = db_addf(&message);
+        break;
+    case DELETE_FRIEND:
+        wrong = db_delf(&message);
+        break;
     }
     //不需要问对面同不同意，直接更新数据库，然后向被加的人发信息更新好友列表
     //todo if !wrong:
     // fan hui
-    printf("\033[42;31m---rsend:\033[0m\n");
+    printf("\033[42;31m---send:\033[0m\n");
     printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
     send(fd, &message, sizeof(message), 0);
 
     fd = locate_user_fd(message.recvName);
-    printf("\033[42;31m---rsend:\033[0m\n");
+    printf("\033[42;31m---send:\033[0m\n");
     printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
     send(fd, &message, sizeof(message), 0);
 }
@@ -142,7 +144,7 @@ void add_remove_friend(int fd)
 void mirror()
 {
     int fd = locate_user_fd(message.recvName);
-    printf("\033[42;31m---rsend:\033[0m\n");
+    printf("\033[42;31m---send:\033[0m\n");
     printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
     send(fd, &message, sizeof(message), 0);
 }
@@ -193,7 +195,7 @@ void echo(int confd)
 int main()
 {
     mysql_init(&mysql); //初始化mysql结构
-    if(mysql_real_connect(&mysql, "localhost", "root", NULL, "chatroom", 0, NULL, 0)==NULL){
+    if (mysql_real_connect(&mysql, "localhost", "root", NULL, "chatroom", 0, NULL, 0) == NULL) {
         printf("%s\n", mysql_error(&mysql));
         return -1;
     }

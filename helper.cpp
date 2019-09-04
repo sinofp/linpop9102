@@ -14,6 +14,15 @@ int locate_user_fd(char name[20])
     return it->second;
 }
 
+void locate_user_name(int fd)
+{
+    for (auto& user : user_map) {
+        if (fd == user.second) {
+            strcpy(message.sendName, user.first.c_str());
+        }
+    }
+}
+
 void insert_user_fd(char name[20], int fd)
 {
     user_map[name] = fd;
@@ -36,6 +45,8 @@ void broadcast_loginout()
     //        send(user.second, &msg, sizeof(msg), 0);
     //    }
     for (auto& user : user_map) {
+        printf("\033[42;31m---send:\033[0m\n");
+        printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
         send(user.second, &message, sizeof(message), 0);
     }
 }
@@ -50,10 +61,13 @@ void send_current_online(int fd)
     }
     puts(message.content);
     message.msgType = VIEW_USER_LIST;
+    printf("\033[42;31m---send:\033[0m\n");
+    printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
     send(fd, &message, sizeof(message), 0);
 }
 
-int user_already_online() {
+int user_already_online()
+{
     it = user_map.find(message.sendName);
     return it != user_map.end();
 }
