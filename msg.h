@@ -41,10 +41,10 @@ enum StateRet {
 /*定义服务器 -- 客户端 消息传送结构体*/
 typedef struct Message {
     char content[CONTENT_SIZE]; /*针对聊天类型的消息，填充该字段*/
-    int msgType; /*消息类型 即为MessageType中的值*/
-    int msgRet; /*针对操作结果类型的消息，填充该字段*/
     char sendName[20]; /*发送者名称*/
     char recvName[20]; /*接收者名称*/
+    int msgType; /*消息类型 即为MessageType中的值*/
+    int msgRet; /*针对操作结果类型的消息，填充该字段*/
     char msgTime[20]; /*消息发送时间*/
     char fileName[FILE_NAME_MAX]; /*发送的文件名*/
 } Message;
