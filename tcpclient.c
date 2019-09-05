@@ -91,7 +91,7 @@ int main()
     memset(&sevaddr, 0, sizeof(sevaddr));
     sevaddr.sin_family = AF_INET;
     sevaddr.sin_port = htons(1234);
-    sevaddr.sin_addr.s_addr = inet_addr("192.168.43.201");
+    sevaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
     // ip port protocol
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);

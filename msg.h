@@ -1,7 +1,7 @@
 #ifndef MSG_H
 #define MSG_H
-#define CONTENT_SIZE 2048
-#define FILE_NAME_MAX 2048
+#define CONTENT_SIZE 70
+#define FILE_NAME_MAX 100
 enum MessageType {
     REGISTER = 1, /*注册请求*/
     LOGIN=0, /*登陆请求*/
@@ -47,6 +47,7 @@ typedef struct Message {
     int msgRet; /*针对操作结果类型的消息，填充该字段*/
     char msgTime[20]; /*消息发送时间*/
     char fileName[FILE_NAME_MAX]; /*发送的文件名*/
+    int fileLength;
 } Message;
 #pragma pack(pop)
 //有用么？接受直接用message，发送用的buf只是为了命令行选择登录还是私聊

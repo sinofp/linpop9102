@@ -31,7 +31,7 @@ int socket_bind_listen(int port)
     struct sockaddr_in myaddr;
     memset(&myaddr, 0, sizeof myaddr);
     myaddr.sin_family = AF_INET;
-    myaddr.sin_addr.s_addr = inet_addr("0.0.0.0");
+    myaddr.sin_addr.s_addr = inet_addr("172.20.10.12");
     myaddr.sin_port = htons(port);
 
     int sfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -91,14 +91,14 @@ void login(int fd)
         printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
         send(fd, &message, sizeof(message), 0);
     } else {
-//        broadcast_loginout();
+        //        broadcast_loginout();
 
         message.msgRet = SUCCESS;
         message.msgType = REPLY;
         printf("\033[42;31m---send:\033[0m\n");
         printf("content:%s\ntype:%d\nfrom:%s\nto:%s\n", message.content, message.msgType, message.sendName, message.recvName);
         send(fd, &message, sizeof(message), 0);
-        usleep(10000);
+        usleep(100);
 
         message.msgType = VIEW_RECORDS;
         db_list(&message); //得到好友列表，存在message.content里：好友名字，好友类型|好友名字，好友类型|...
@@ -107,7 +107,7 @@ void login(int fd)
         send(fd, &message, sizeof(message), 0);
 
         // 睡一觉，否则发太快，客户端socket.readyRead只触发一次
-        usleep(10000);
+        usleep(100);
 
         message.msgType = VIEW_USER_LIST;
         //得到在线用户列表，存在message.content里：好友名字|好友名字|...
@@ -164,11 +164,16 @@ void alter_friend()
 void echo(int confd)
 {
 
-    int recv_len = 0;
+    int recv_len = 0, offset = 0;
     while (1) {
-        recv_len = recv(confd, (&message) + recv_len, sizeof message, 0);
+        recv_len = recv(confd, (&message) + offset, sizeof message, 0);
         printf("recieved %d\t", recv_len);
-        if (0 == recv_len) {
+        if (-1 == recv_len) {
+            puts("recieved -1");
+            return;
+        }
+        offset += recv_len;
+        if (0 == recv_len || (sizeof message) == offset) {
             // 读完了
             break;
         }
@@ -184,8 +189,8 @@ void echo(int confd)
     case LOGIN:
         login(confd);
         break;
-        case FL:
-        case FL_CONTENT:
+    case FL:
+    case FL_CONTENT:
     case PERSONAL_CHAT:
         mirror();
         break;
@@ -198,6 +203,9 @@ void echo(int confd)
         break;
     case MOVE_FRIEND:
         alter_friend();
+        break;
+    case VIEW_USER_LIST:
+        send_current_online(confd);
         break;
     }
 }
@@ -236,8 +244,8 @@ int main()
                 socklen_t addrlen = sizeof addr;
 
                 /* https://stackoverflow.com/a/22339017 */
-                conn_sock = accept4(listen_sock,
-                    (struct sockaddr*)&addr, &addrlen, SOCK_NONBLOCK);
+                conn_sock = accept /*4*/ (listen_sock,
+                    (struct sockaddr*)&addr, &addrlen /*, SOCK_NONBLOCK*/);
                 if (conn_sock == -1) {
                     PEE("accept");
                 }
