@@ -1,1 +1,0 @@
-/usr/bin/c++     CMakeFiles/qq.dir/epolltest.c.o CMakeFiles/qq.dir/helper.cpp.o CMakeFiles/qq.dir/database.c.o  -o qq  -L/usr/lib/mysql -Wl,-rpath,/usr/lib/mysql -lmysqlclient 
